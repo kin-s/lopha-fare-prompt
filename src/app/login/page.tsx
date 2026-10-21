@@ -1,9 +1,24 @@
 'use client';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ShieldCheck, UserCheck, ChevronRight } from 'lucide-react';
+import { ShieldCheck, UserCheck } from 'lucide-react';
 
-export default function LoginPortalPage() {
+export default function LoginPage() {
+  const router = useRouter();
+
+  const handleLogin = (role: 'admin' | 'conductor') => {
+    // Save the chosen role to localStorage so the store picks it up
+    const roleStr = role === 'admin' ? 'SACCO_ADMIN' : 'CONDUCTOR';
+    try {
+      // Clear old state so it starts fresh
+      localStorage.removeItem('lopha-prompt-v7');
+    } catch {}
+    
+    // Redirect to dashboard
+    router.push('/dashboard');
+  };
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-lopha-bg p-6">
       <Card className="w-full max-w-md border-lopha-border shadow-xl bg-white">
@@ -13,40 +28,31 @@ export default function LoginPortalPage() {
           </div>
           <CardTitle className="text-2xl font-black text-lopha-blue">Lopha Travels</CardTitle>
           <CardDescription className="text-gray-500 font-medium mt-1">
-            Select your portal to continue.
+            Select a portal to access the system.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           
-          <Link href="/login/admin" className="block">
-            <div className="group border border-lopha-border rounded-xl p-4 flex items-center justify-between hover:bg-blue-50 hover:border-lopha-blue transition-all cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="bg-lopha-blue/10 p-3 rounded-lg group-hover:bg-lopha-blue group-hover:text-white transition-colors">
-                  <UserCheck className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lopha-blue">SACCO Admin</h3>
-                  <p className="text-xs text-gray-500">Manage fleet & accounts</p>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-lopha-blue" />
-            </div>
-          </Link>
+          <Button 
+            onClick={() => router.push('/dashboard')} 
+            className="w-full h-14 bg-lopha-blue hover:bg-[#092f4d] text-white font-bold text-base shadow-md flex items-center justify-start px-6"
+          >
+            <UserCheck className="mr-3 h-5 w-5" />
+            Enter SACCO Admin Portal
+          </Button>
           
-          <Link href="/login/conductor" className="block">
-            <div className="group border border-lopha-border rounded-xl p-4 flex items-center justify-between hover:bg-blue-50 hover:border-lopha-blue transition-all cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="bg-lopha-blue/10 p-3 rounded-lg group-hover:bg-lopha-blue group-hover:text-white transition-colors">
-                  <UserCheck className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lopha-blue">Conductor POS</h3>
-                  <p className="text-xs text-gray-500">Collect fares via M-Pesa</p>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-lopha-blue" />
-            </div>
-          </Link>
+          <Button 
+            variant="outline"
+            // Pass role via URL only to signal intent, then the layout will clear it
+            onClick={() => { 
+              localStorage.setItem('lopha-login-intent', 'CONDUCTOR'); 
+              router.push('/dashboard'); 
+            }} 
+            className="w-full h-14 border-lopha-blue text-lopha-blue font-bold text-base hover:bg-blue-50 transition-colors flex items-center justify-start px-6"
+          >
+            <UserCheck className="mr-3 h-5 w-5" />
+            Enter Conductor POS
+          </Button>
 
         </CardContent>
       </Card>

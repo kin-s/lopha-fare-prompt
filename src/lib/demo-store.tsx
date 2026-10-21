@@ -3,11 +3,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { DemoUser, Vehicle, ReceivingAccount, Transaction, UserRole, Shift } from '@/types';
 import { demoUsers, initialVehicles, initialAccounts, initialTransactions, initialShifts } from '@/lib/mock-data';
 
-const STORAGE_KEY = 'lopha-prompt-v6';
+const STORAGE_KEY = 'lopha-prompt-v7';
 
 type DemoState = { 
   currentUser: DemoUser; 
-  currentVehicle: Vehicle | null; // NEW: Tracks the logged-in vehicle
+  currentVehicle: Vehicle | null; 
   vehicles: Vehicle[]; 
   accounts: ReceivingAccount[]; 
   transactions: Transaction[]; 
@@ -18,7 +18,7 @@ type DemoContextValue = DemoState & {
   hydrated: boolean; 
   setRole: (role: UserRole) => void; 
   loginConductor: (regNumber: string, name: string) => boolean;
-  logoutConductor: () => void;
+  logout: () => void;
   addTransaction: (tx: Transaction) => void; 
   addVehicle: (v: Vehicle) => void; 
   addAccount: (a: ReceivingAccount) => void; 
@@ -41,7 +41,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) setState(JSON.parse(raw)); } catch {}
+    try { 
+      const raw = localStorage.getItem(STORAGE_KEY); 
+      if (raw) setState(JSON.parse(raw)); 
+    } catch {}
     setHydrated(true);
   }, []);
 
@@ -51,24 +54,20 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
 
   const setRole = useCallback((role: UserRole) => { 
     const u = demoUsers.find(x => x.role === role); 
-    // If switching to Conductor via sidebar, we clear the vehicle so they must log in
-    if (u) setState(p => ({ ...p, currentUser: u, currentVehicle: role === 'CONDUCTOR' ? null : p.currentVehicle })); 
+    if (u) setState(p => ({ ...p, currentUser: u, currentVehicle: null })); 
   }, []);
 
   const loginConductor = useCallback((regNumber: string, name: string) => {
     const vehicle = state.vehicles.find(v => v.regNumber.replace(/\s/g, '').toUpperCase() === regNumber.replace(/\s/g, '').toUpperCase());
     if (vehicle) {
-      // Find or create conductor user
-      const existingUser = demoUsers.find(u => u.name.toLowerCase() === name.toLowerCase() && u.role === 'CONDUCTOR');
-      const user = existingUser || { id: crypto.randomUUID(), name, role: 'CONDUCTOR' as UserRole };
-      
+      const user = demoUsers.find(u => u.name.toLowerCase() === name.toLowerCase() && u.role === 'CONDUCTOR') || { id: crypto.randomUUID(), name, role: 'CONDUCTOR' as UserRole };
       setState(p => ({ ...p, currentUser: user, currentVehicle: vehicle }));
       return true;
     }
     return false;
   }, [state.vehicles]);
 
-  const logoutConductor = useCallback(() => {
+  const logout = useCallback(() => {
     setState(p => ({ ...p, currentVehicle: null }));
   }, []);
 
@@ -83,7 +82,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     setState({ currentUser: demoUsers[0], currentVehicle: null, vehicles: initialVehicles, accounts: initialAccounts, transactions: [], shifts: [] }); 
   }, []);
 
-  return <DemoContext.Provider value={{ ...state, hydrated, setRole, loginConductor, logoutConductor, addTransaction, addVehicle, addAccount, openShift, closeShift, resetDemo }}>{children}</DemoContext.Provider>;
+  return <DemoContext.Provider value={{ ...state, hydrated, setRole, loginConductor, logout, addTransaction, addVehicle, addAccount, openShift, closeShift, resetDemo }}>{children}</DemoContext.Provider>;
 }
 
 export function useDemoStore() {

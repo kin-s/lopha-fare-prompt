@@ -1,31 +1,24 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useDemoStore } from '@/lib/demo-store';
+import { usePathname } from 'next/navigation';
+import { DemoStoreProvider, useDemoStore } from '@/lib/demo-store';
 import { getNavItems } from '@/lib/permissions';
 import { Menu, X, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { currentUser, setRole, resetDemo } = useDemoStore();
+  const { currentUser, setRole, logout, resetDemo } = useDemoStore();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Sync the store role with the URL parameter on load
-  const roleParam = searchParams.get('role');
-  useEffect(() => {
-    if (roleParam === 'admin' && currentUser.role !== 'SACCO_ADMIN') setRole('SACCO_ADMIN');
-    if (roleParam === 'conductor' && currentUser.role !== 'CONDUCTOR') setRole('CONDUCTOR');
-  }, [roleParam, currentUser.role, setRole]);
 
   const nav = getNavItems(currentUser.role);
 
   const handleLogout = () => {
-    resetDemo();
-    router.push('/login');
+    logout(); // clears vehicle
+    setRole('SACCO_ADMIN'); // resets role to admin
+    resetDemo(); // wipes local storage for a clean slate
+    window.location.href = '/login'; // hard redirect to login
   };
 
   return (
@@ -57,7 +50,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               return (
                 <Link 
                   key={item.href} 
-                  href={`${item.href}?role=${currentUser.role === 'SACCO_ADMIN' ? 'admin' : 'conductor'}`}
+                  href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={`block px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     active ? 'bg-white text-lopha-blue font-bold shadow-md' : 'text-white/80 hover:bg-white/10'
@@ -93,9 +86,5 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <Suspense fallback={<div className="h-screen flex items-center justify-center font-bold text-lopha-blue">Loading System...</div>}>
-      <Shell>{children}</Shell>
-    </Suspense>
-  );
+  return <DemoStoreProvider><Shell>{children}</Shell></DemoStoreProvider>;
 }
