@@ -1,16 +1,32 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { DemoStoreProvider, useDemoStore } from '@/lib/demo-store';
 import { getNavItems } from '@/lib/permissions';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { currentUser, setRole, resetDemo } = useDemoStore();
-  const nav = getNavItems(currentUser.role);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Sync the store role with the URL parameter on load
+  const roleParam = searchParams.get('role');
+  useEffect(() => {
+    if (roleParam === 'admin' && currentUser.role !== 'SACCO_ADMIN') setRole('SACCO_ADMIN');
+    if (roleParam === 'conductor' && currentUser.role !== 'CONDUCTOR') setRole('CONDUCTOR');
+  }, [roleParam, currentUser.role, setRole]);
+
+  const nav = getNavItems(currentUser.role);
+
+  const handleLogout = () => {
+    resetDemo();
+    router.push('/login');
+  };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-lopha-bg text-lopha-blue">
@@ -30,7 +46,9 @@ function Shell({ children }: { children: React.ReactNode }) {
         <div>
           <div className="hidden md:block mb-10 mt-2">
             <div className="font-black text-2xl tracking-tighter">LOPHA</div>
-            <div className="text-[10px] font-bold tracking-widest uppercase opacity-70">Travels System</div>
+            <div className="text-[10px] font-bold tracking-widest uppercase opacity-70">
+              {currentUser.role === 'SACCO_ADMIN' ? 'Admin Portal' : 'Conductor POS'}
+            </div>
           </div>
           
           <nav className="space-y-1 mt-16 md:mt-0">
@@ -39,7 +57,8 @@ function Shell({ children }: { children: React.ReactNode }) {
               return (
                 <Link 
                   key={item.href} 
-                  href={item.href} 
+                  // Preserve the role parameter when navigating
+                  href={`${item.href}?role=${currentUser.role === 'SACCO_ADMIN' ? 'admin' : 'conductor'}`}
                   onClick={() => setMobileOpen(false)}
                   className={`block px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     active ? 'bg-white text-lopha-blue font-bold shadow-md' : 'text-white/80 hover:bg-white/10'
@@ -52,30 +71,19 @@ function Shell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
         
-        <div className="border-t border-white/20 pt-4 space-y-3">
-          <select 
-            value={currentUser.role} 
-            onChange={e => setRole(e.target.value as any)} 
-            className="w-full bg-black/20 text-white text-sm rounded-lg p-3 border border-white/20 outline-none cursor-pointer font-medium"
-          >
-            <option value="SACCO_ADMIN" className="text-black">SACCO Admin</option>
-            <option value="CONDUCTOR" className="text-black">Conductor</option>
-          </select>
-          <div className="text-xs opacity-80 font-medium flex justify-between items-center">
-            <span>Signed in:</span>
-            <span className="font-bold">{currentUser.name}</span>
+        <div className="border-t border-white/20 pt-4 space-y-4">
+          <div className="text-xs opacity-80 font-medium flex flex-col gap-1">
+            <span>Signed in as:</span>
+            <span className="font-bold text-sm text-white">{currentUser.name}</span>
           </div>
-          <button onClick={resetDemo} className="text-xs text-red-300 hover:text-red-200 underline font-bold block w-full text-left">
-            Reset Demo Data
-          </button>
+          <Button onClick={handleLogout} variant="outline" className="w-full border-white/30 text-white hover:bg-white/10 hover:text-white justify-start">
+            <LogOut className="h-4 w-4 mr-2" /> Log Out
+          </Button>
         </div>
       </aside>
 
       {mobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
-          onClick={() => setMobileOpen(false)} 
-        />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
       <main className="flex-1 w-full overflow-x-hidden animate-page">
@@ -86,5 +94,9 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <DemoStoreProvider><Shell>{children}</Shell></DemoStoreProvider>;
+  return (
+    <DemoStoreProvider>
+      <Shell>{children}</Shell>
+    </DemoStoreProvider>
+  );
 }

@@ -7,10 +7,6 @@ import { ShieldCheck, UserCheck } from 'lucide-react';
 export default function LoginPage() {
   const router = useRouter();
 
-  const handleLogin = () => {
-    router.push('/dashboard');
-  };
-
   return (
     <main className="min-h-screen flex items-center justify-center bg-lopha-bg p-6">
       <Card className="w-full max-w-md border-lopha-border shadow-xl bg-white">
@@ -20,31 +16,28 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-black text-lopha-blue">Lopha Travels</CardTitle>
           <CardDescription className="text-gray-500 font-medium mt-1">
-            Select a demo role to access the SACCO system.
+            Select a portal to access the system.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           
           <Button 
-            onClick={handleLogin} 
+            onClick={() => router.push('/dashboard?role=admin')} 
             className="w-full h-14 bg-lopha-blue hover:bg-[#092f4d] text-white font-bold text-base shadow-md flex items-center justify-start px-6"
           >
             <UserCheck className="mr-3 h-5 w-5" />
-            Continue as SACCO Admin
+            Enter SACCO Admin Portal
           </Button>
           
           <Button 
             variant="outline"
-            onClick={handleLogin} 
+            onClick={() => router.push('/dashboard?role=conductor')} 
             className="w-full h-14 border-lopha-blue text-lopha-blue font-bold text-base hover:bg-blue-50 transition-colors flex items-center justify-start px-6"
           >
             <UserCheck className="mr-3 h-5 w-5" />
-            Continue as Conductor
+            Enter Conductor POS
           </Button>
 
-          <p className="text-xs text-center text-gray-400 pt-4">
-            You can switch between these roles at any time inside the dashboard using the sidebar.
-          </p>
         </CardContent>
       </Card>
     </main>
