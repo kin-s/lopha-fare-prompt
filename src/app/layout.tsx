@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { SplashScreen } from "@/components/ui/splash-screen";
 import { DemoStoreProvider } from "@/lib/demo-store";
+import { PWARegister } from "@/components/ui/pwa-register";
 
 const poppins = Poppins({
   weight: ['400', '500', '600', '700'],
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.className} antialiased bg-lopha-bg text-lopha-blue`}>
+        <PWARegister />
         <SplashScreen />
         <DemoStoreProvider>
           {children}
