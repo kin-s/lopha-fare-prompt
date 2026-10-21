@@ -76,7 +76,7 @@ export default function VehiclesPage() {
               
               <div className="space-y-2">
                 <Label className="text-lopha-blue font-bold">Receiving Account</Label>
-                <Select value={accId} onValueChange={setAccId}>
+                <Select value={accId} onValueChange={(val) => setAccId(val || '')}>
                   <SelectTrigger className="h-12 bg-white border-lopha-border focus:ring-lopha-blue">
                     <SelectValue placeholder="Select an account" />
                   </SelectTrigger>
