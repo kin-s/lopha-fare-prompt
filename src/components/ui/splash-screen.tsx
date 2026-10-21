@@ -24,13 +24,13 @@ export function SplashScreen() {
         isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      {/* 1. The Matatu Background Image - Now 100% visible */}
+      {/* 1. The Matatu Background Image - Updated to captain.jpg */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/matatu-bg.jpg')" }}
+        style={{ backgroundImage: "url('/captain.jpg')" }}
       />
       
-      {/* 2. Subtle Overlay - Darkens only the very top/bottom to keep text readable without hiding the image */}
+      {/* 2. Subtle Overlay - Darkens top/bottom to keep text readable */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0B3B60]/90 via-black/30 to-[#0B3B60]/90" />
 
       {/* 3. The Content */}
@@ -54,7 +54,7 @@ export function SplashScreen() {
         <div className="animate-premium-3 flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
           <p className="text-[10px] md:text-xs text-white/90 font-bold tracking-[0.2em] uppercase drop-shadow-md">
-            Securing...
+            Securing
           </p>
         </div>
         
