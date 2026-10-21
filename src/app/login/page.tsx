@@ -1,21 +1,23 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import { useDemoStore } from '@/lib/demo-store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ShieldCheck, UserCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setRole, resetDemo } = useDemoStore();
 
-  const handleLogin = (role: 'admin' | 'conductor') => {
-    // Save the chosen role to localStorage so the store picks it up
-    const roleStr = role === 'admin' ? 'SACCO_ADMIN' : 'CONDUCTOR';
-    try {
-      // Clear old state so it starts fresh
-      localStorage.removeItem('lopha-prompt-v7');
-    } catch {}
-    
-    // Redirect to dashboard
+  const handleAdminLogin = () => {
+    resetDemo(); // Fresh slate
+    setRole('SACCO_ADMIN');
+    router.push('/dashboard');
+  };
+
+  const handleConductorLogin = () => {
+    resetDemo(); // Fresh slate
+    setRole('CONDUCTOR');
     router.push('/dashboard');
   };
 
@@ -34,7 +36,7 @@ export default function LoginPage() {
         <CardContent className="space-y-4">
           
           <Button 
-            onClick={() => router.push('/dashboard')} 
+            onClick={handleAdminLogin} 
             className="w-full h-14 bg-lopha-blue hover:bg-[#092f4d] text-white font-bold text-base shadow-md flex items-center justify-start px-6"
           >
             <UserCheck className="mr-3 h-5 w-5" />
@@ -43,17 +45,13 @@ export default function LoginPage() {
           
           <Button 
             variant="outline"
-            // Pass role via URL only to signal intent, then the layout will clear it
-            onClick={() => { 
-              localStorage.setItem('lopha-login-intent', 'CONDUCTOR'); 
-              router.push('/dashboard'); 
-            }} 
+            onClick={handleConductorLogin} 
             className="w-full h-14 border-lopha-blue text-lopha-blue font-bold text-base hover:bg-blue-50 transition-colors flex items-center justify-start px-6"
           >
             <UserCheck className="mr-3 h-5 w-5" />
             Enter Conductor POS
           </Button>
-
+          
         </CardContent>
       </Card>
     </main>

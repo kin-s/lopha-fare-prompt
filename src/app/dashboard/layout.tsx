@@ -1,29 +1,28 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { DemoStoreProvider, useDemoStore } from '@/lib/demo-store';
+import { usePathname, useRouter } from 'next/navigation';
+import { useDemoStore } from '@/lib/demo-store';
 import { getNavItems } from '@/lib/permissions';
 import { Menu, X, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-function Shell({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { currentUser, setRole, logout, resetDemo } = useDemoStore();
+  const router = useRouter();
+  const { currentUser, resetDemo } = useDemoStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const nav = getNavItems(currentUser.role);
 
   const handleLogout = () => {
-    logout(); // clears vehicle
-    setRole('SACCO_ADMIN'); // resets role to admin
-    resetDemo(); // wipes local storage for a clean slate
-    window.location.href = '/login'; // hard redirect to login
+    resetDemo();
+    router.push('/login');
   };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-lopha-bg text-lopha-blue">
-      
+      {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between bg-lopha-blue text-white p-4 sticky top-0 z-40 shadow-md">
         <div className="font-black text-xl tracking-tight">LOPHA TRAVELS</div>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2">
@@ -31,6 +30,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </button>
       </div>
 
+      {/* Sidebar */}
       <aside className={`
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} 
         md:translate-x-0 fixed md:sticky top-0 left-0 z-50 w-64 h-screen 
@@ -83,8 +83,4 @@ function Shell({ children }: { children: React.ReactNode }) {
       </main>
     </div>
   );
-}
-
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <DemoStoreProvider><Shell>{children}</Shell></DemoStoreProvider>;
 }
