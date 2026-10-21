@@ -22,24 +22,17 @@ export function SplashScreen() {
         isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      {/* 1. Blurred Background (Fills the empty space on wide/tall screens) */}
-      <img 
-        src="/captain.jpg" 
-        alt="Lopha Background Blur" 
-        className="absolute inset-0 w-full h-full object-cover blur-2xl scale-125 opacity-50" 
-      />
-
-      {/* 2. Main Image (Ensures the whole matatu is visible without cropping) */}
+      {/* Full-Bleed Image with object-cover */}
       <img 
         src="/captain.jpg" 
         alt="Lopha Matatu" 
-        className="absolute inset-0 w-full h-full object-contain drop-shadow-2xl" 
+        className="absolute inset-0 w-full h-full object-cover object-center" 
       />
       
-      {/* 3. Dark Overlay (Ensures the white text is readable against the image) */}
-      <div className="absolute inset-0 bg-[#0B3B60]/60" />
+      {/* Gradient Overlay - Darkens the image so the white text pops perfectly */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0B3B60]/90 via-black/40 to-[#0B3B60]/90" />
 
-      {/* 4. The Content */}
+      {/* The Content */}
       <div className="relative z-10 flex flex-col items-center">
         <div className="overflow-hidden mb-2">
           <div className="animate-premium-1 text-6xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
