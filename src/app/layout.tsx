@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { SplashScreen } from "@/components/ui/splash-screen";
@@ -10,8 +10,17 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Lopha Travels | Fare Prompt",
+  title: "Lopha Fare Prompt",
   description: "Mobile-first matatu fare-prompting prototype (demo)",
+  manifest: "/manifest.json", // Links the PWA manifest
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1D61F3", // Matches your Blue Ribbon theme
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
