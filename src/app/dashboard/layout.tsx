@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { DemoStoreProvider, useDemoStore } from '@/lib/demo-store';
+import { useDemoStore } from '@/lib/demo-store';
 import { getNavItems } from '@/lib/permissions';
 import { Menu, X, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -94,10 +94,8 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <DemoStoreProvider>
-      <Suspense fallback={<div className="h-screen flex items-center justify-center font-bold text-lopha-blue">Loading System...</div>}>
-        <Shell>{children}</Shell>
-      </Suspense>
-    </DemoStoreProvider>
+    <Suspense fallback={<div className="h-screen flex items-center justify-center font-bold text-lopha-blue">Loading System...</div>}>
+      <Shell>{children}</Shell>
+    </Suspense>
   );
 }
