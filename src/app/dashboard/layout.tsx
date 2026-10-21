@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { DemoStoreProvider, useDemoStore } from '@/lib/demo-store';
@@ -57,7 +57,6 @@ function Shell({ children }: { children: React.ReactNode }) {
               return (
                 <Link 
                   key={item.href} 
-                  // Preserve the role parameter when navigating
                   href={`${item.href}?role=${currentUser.role === 'SACCO_ADMIN' ? 'admin' : 'conductor'}`}
                   onClick={() => setMobileOpen(false)}
                   className={`block px-3 py-3 rounded-lg text-sm font-medium transition-all ${
@@ -96,7 +95,9 @@ function Shell({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <DemoStoreProvider>
-      <Shell>{children}</Shell>
+      <Suspense fallback={<div className="h-screen flex items-center justify-center font-bold text-lopha-blue">Loading System...</div>}>
+        <Shell>{children}</Shell>
+      </Suspense>
     </DemoStoreProvider>
   );
 }
