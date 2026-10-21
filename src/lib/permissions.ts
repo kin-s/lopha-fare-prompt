@@ -1,7 +1,7 @@
 import { UserRole } from '@/types';
 
 export function getNavItems(role: UserRole) {
-  if (role === 'SACCO_ADMIN' || role === 'FINANCE_OFFICER') {
+  if (role === 'SACCO_ADMIN') {
     return [
       { label: 'Overview', href: '/dashboard' },
       { label: 'Accounts', href: '/dashboard/accounts' },
@@ -11,6 +11,8 @@ export function getNavItems(role: UserRole) {
       { label: 'Reports & CSV', href: '/dashboard/reports' },
     ];
   }
+  
+  // Conductor Navigation
   return [
     { label: 'Fare Prompt', href: '/dashboard' },
     { label: 'My Transactions', href: '/dashboard/transactions' },

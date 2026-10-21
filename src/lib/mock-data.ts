@@ -2,7 +2,6 @@ import { DemoUser, Vehicle, ReceivingAccount, Transaction, Shift } from '@/types
 
 export const demoUsers: DemoUser[] = [
   { id: 'u1', name: 'Amina Yusuf', role: 'SACCO_ADMIN' },
-  { id: 'u2', name: 'Peter Njoroge', role: 'FINANCE_OFFICER' },
   { id: 'u3', name: 'David Ochieng', role: 'CONDUCTOR' },
 ];
 

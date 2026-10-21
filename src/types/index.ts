@@ -1,4 +1,4 @@
-export type UserRole = 'SACCO_ADMIN' | 'FINANCE_OFFICER' | 'CONDUCTOR';
+export type UserRole = 'SACCO_ADMIN' | 'CONDUCTOR';
 
 export type DemoUser = { id: string; name: string; role: UserRole };
 

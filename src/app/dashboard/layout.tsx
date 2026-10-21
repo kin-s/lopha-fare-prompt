@@ -15,7 +15,6 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-lopha-bg text-lopha-blue">
       
-      {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between bg-lopha-blue text-white p-4 sticky top-0 z-40 shadow-md">
         <div className="font-black text-xl tracking-tight">LOPHA TRAVELS</div>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2">
@@ -23,7 +22,6 @@ function Shell({ children }: { children: React.ReactNode }) {
         </button>
       </div>
 
-      {/* Sidebar (Fixed on Desktop, Overlay on Mobile) */}
       <aside className={`
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} 
         md:translate-x-0 fixed md:sticky top-0 left-0 z-50 w-64 h-screen 
@@ -54,7 +52,6 @@ function Shell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
         
-        {/* Role Switcher */}
         <div className="border-t border-white/20 pt-4 space-y-3">
           <select 
             value={currentUser.role} 
@@ -62,7 +59,6 @@ function Shell({ children }: { children: React.ReactNode }) {
             className="w-full bg-black/20 text-white text-sm rounded-lg p-3 border border-white/20 outline-none cursor-pointer font-medium"
           >
             <option value="SACCO_ADMIN" className="text-black">SACCO Admin</option>
-            <option value="FINANCE_OFFICER" className="text-black">Finance Officer</option>
             <option value="CONDUCTOR" className="text-black">Conductor</option>
           </select>
           <div className="text-xs opacity-80 font-medium flex justify-between items-center">
@@ -75,7 +71,6 @@ function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Mobile Overlay (Darkens background when menu is open) */}
       {mobileOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 md:hidden" 
@@ -83,7 +78,6 @@ function Shell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {/* Main Content Area */}
       <main className="flex-1 w-full overflow-x-hidden animate-page">
         {children}
       </main>

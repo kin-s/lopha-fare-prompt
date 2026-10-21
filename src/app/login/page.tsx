@@ -2,13 +2,11 @@
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ShieldCheck, UserCheck, ShieldAlert } from 'lucide-react';
+import { ShieldCheck, UserCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
 
-  // Since the DemoStore defaults to Admin, clicking these just navigates to the dashboard.
-  // In the dashboard, they can use the sidebar to switch roles immediately.
   const handleLogin = () => {
     router.push('/dashboard');
   };
@@ -35,15 +33,6 @@ export default function LoginPage() {
             Continue as SACCO Admin
           </Button>
           
-          <Button 
-            variant="outline"
-            onClick={handleLogin} 
-            className="w-full h-14 border-lopha-blue text-lopha-blue font-bold text-base hover:bg-blue-50 transition-colors flex items-center justify-start px-6"
-          >
-            <ShieldAlert className="mr-3 h-5 w-5" />
-            Continue as Finance Officer
-          </Button>
-
           <Button 
             variant="outline"
             onClick={handleLogin} 
