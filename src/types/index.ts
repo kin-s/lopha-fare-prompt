@@ -1,83 +1,47 @@
-export type UserRole = 'admin' | 'conductor';
+export type UserRole = 'SACCO_ADMIN' | 'FINANCE_OFFICER' | 'CONDUCTOR';
 
-export type DemoUser = {
+export type DemoUser = { id: string; name: string; role: UserRole };
+
+export type AccountType = 'Pochi la Biashara' | 'M-Pesa Till' | 'M-Pesa Paybill';
+export type IntegrationStatus = 'Awaiting Verification' | 'Prompt Supported' | 'Fully Configured' | 'Disabled';
+
+export type ReceivingAccount = {
   id: string;
-  name: string;
-  role: UserRole;
-  assignedVehicleIds: string[];
-};
-
-export type Driver = {
-  id: string;
-  name: string;
-  phone: string;
-};
-
-export type VehicleStatus = 'Active' | 'Inactive';
-
-export type AccountOwnershipCategory =
-  | 'Vehicle Owner'
-  | 'Conductor'
-  | 'SACCO or Treasurer'
-  | 'Varies or Requires Confirmation';
-
-export type AccountStatus =
-  | 'Not Configured'
-  | 'Awaiting Verification'
-  | 'Compatibility Unverified'
-  | 'Approved for Future Integration'
-  | 'Disabled';
-
-export type ReceivingAccountConfig = {
-  vehicleId: string;
-  accountType: string;
-  ownershipCategory: AccountOwnershipCategory;
+  type: AccountType;
+  displayName: string;
   maskedIdentifier: string;
-  compatibilityStatus: AccountStatus;
-  liveStkPushEnabled: false;
+  integrationStatus: IntegrationStatus;
 };
 
 export type Vehicle = {
   id: string;
-  registrationNumber: string;
+  regNumber: string;
   routeName: string;
-  assignedDriverId: string; // New field
-  assignedConductorName: string; // New field (using name for simplicity in this demo)
-  status: VehicleStatus;
-  receivingAccount: ReceivingAccountConfig;
+  conductorId: string;
+  accountId: string;
+  status: 'Active' | 'Maintenance';
 };
 
-export type PaymentStatus =
-  | 'SUCCESS'
-  | 'PENDING'
-  | 'FAILED'
-  | 'CANCELLED'
-  | 'TIMED_OUT';
-
-export type PaymentTransaction = {
+export type Shift = {
   id: string;
-  demoReference: string;
-  vehicleId: string;
-  vehicleRegistration: string;
   conductorId: string;
-  maskedPassengerPhone: string;
+  vehicleId: string;
+  startTime: string;
+  endTime: string | null;
+  status: 'OPEN' | 'CLOSED';
+};
+
+export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
+
+export type Transaction = {
+  id: string;
+  vehicleId: string;
+  vehicleReg: string;
+  conductorId: string;
+  accountId: string;
+  maskedPhone: string;
   amount: number;
   status: PaymentStatus;
+  mpesaRef: string | null;
   createdAt: string;
-  updatedAt: string;
-  source: 'SIMULATION';
-  testOutcome: string;
-};
-
-export type AuditEvent = {
-  id: string;
-  action: string;
-  userId: string;
-  userName: string;
-  timestamp: string;
-};
-
-export type DemoSettings = {
-  globalLiveStkPushStatus: 'DISABLED';
-  compatibilityVerification: string;
 };

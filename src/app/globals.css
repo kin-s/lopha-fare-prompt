@@ -5,8 +5,6 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -16,99 +14,42 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
-  --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
 
-  /* Lopha Custom Brand Colours */
-  --color-lopha-mint: #1D61F3;       /* Blue Ribbon */
-  --color-lopha-charcoal: #141414;   
-  --color-lopha-dark: #1D1D1D;       
-  --color-lopha-light: #F1F4F9;      /* Catskill White */
-  --color-lopha-gray: #66716F;
-  --color-lopha-border: #E4EAE8;
+  /* Lopha Travels Brand Colours */
+  --color-lopha-blue: #0B3B60;
+  --color-lopha-red: #E63946;
+  --color-lopha-bg: #F4F7F9;
+  --color-lopha-border: #D1DCE5;
 }
 
 :root {
-  --background: #F1F4F9; 
-  --foreground: #141414; 
+  --background: #F4F7F9;
+  --foreground: #0B3B60;
   --card: #FFFFFF;
-  --card-foreground: #141414;
-  --popover: #FFFFFF;
-  --popover-foreground: #141414;
-  --primary: #1D61F3;
+  --card-foreground: #0B3B60;
+  --primary: #0B3B60;
   --primary-foreground: #FFFFFF;
-  --secondary: #F1F4F9;
-  --secondary-foreground: #141414;
-  --muted: #F1F4F9;
-  --muted-foreground: #66716F;
-  --accent: #1D61F3;
+  --secondary: #E2E8F0;
+  --secondary-foreground: #0B3B60;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #E63946;
   --accent-foreground: #FFFFFF;
-  --destructive: #ef4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #E4EAE8;
-  --input: #E4EAE8;
-  --ring: #1D61F3;
-  --radius: 0.75rem; 
+  --destructive: #EF4444;
+  --border: #D1DCE5;
+  --ring: #0B3B60;
+  --radius: 0.75rem;
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
 }
 
-/* Smooth Page Transitions */
 @keyframes fadeInSlideUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.animate-page {
-  animation: fadeInSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* High-End Skeleton Pulse */
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .4; }
-}
-.animate-pulse-soft {
-  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* --- Premium Splash Screen Animations --- */
-@keyframes premiumFadeUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-@keyframes glowPulse {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.1); }
-}
-@keyframes spinSlow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.animate-premium-1 {
-  animation: premiumFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
-  opacity: 0;
-}
-.animate-premium-2 {
-  animation: premiumFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
-  opacity: 0;
-}
-.animate-premium-3 {
-  animation: premiumFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
-  opacity: 0;
-}
-.animate-glow { animation: glowPulse 3s ease-in-out infinite; }
-.animate-spin-slow { animation: spinSlow 1.5s linear infinite; }
+.animate-page { animation: fadeInSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }

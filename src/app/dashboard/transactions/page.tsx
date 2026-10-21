@@ -1,113 +1,60 @@
 'use client';
-import { useState } from 'react';
 import { useDemoStore } from '@/lib/demo-store';
 import { formatKsh, formatTimestamp } from '@/lib/formatters';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { exportTransactionsCsv } from '@/lib/csv-export';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageLoader } from '@/components/ui/page-loader';
-import { TransactionDetailDialog } from '@/components/transactions/transaction-detail-dialog';
-import { ArrowDown, ArrowUp } from 'lucide-react';
 
 export default function TransactionsPage() {
-  const { transactions, hydrated } = useDemoStore();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [sortConfig, setSortConfig] = useState<{ key: 'amount' | 'createdAt', direction: 'asc' | 'desc' }>({ key: 'createdAt', direction: 'desc' });
-
+  const { transactions, currentUser, hydrated } = useDemoStore();
+  
   if (!hydrated) return <PageLoader />;
 
-  const handleSort = (key: 'amount' | 'createdAt') => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
-    }));
-  };
-
-  const filteredAndSorted = [...transactions]
-    .filter(t => {
-      const matchesSearch = t.demoReference.toLowerCase().includes(search.toLowerCase()) || t.vehicleRegistration.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (sortConfig.key === 'amount') {
-        return sortConfig.direction === 'asc' ? a.amount - b.amount : b.amount - a.amount;
-      }
-      return sortConfig.direction === 'asc' 
-        ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+  const isConductor = currentUser.role === 'CONDUCTOR';
+  
+  // If Conductor, filter by their ID. If Admin, show all.
+  const list = isConductor 
+    ? transactions.filter(t => t.conductorId === currentUser.id) 
+    : transactions;
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold text-lopha-charcoal">Transactions</h1>
-        <Button onClick={() => exportTransactionsCsv(filteredAndSorted)} className="bg-lopha-charcoal text-white shadow-sm hover:shadow">
-          Export CSV
-        </Button>
-      </div>
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4 animate-page">
+      <h1 className="text-2xl font-black text-lopha-blue">
+        {isConductor ? 'My Transactions' : 'All SACCO Transactions'}
+      </h1>
       
-      <div className="flex flex-col md:flex-row gap-4">
-        <Input 
-          placeholder="Search reference or vehicle..." 
-          value={search} onChange={e => setSearch(e.target.value)}
-          className="max-w-sm border-lopha-border bg-white shadow-sm" 
-        />
-        <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val || 'ALL')}>
-          <SelectTrigger className="w-[180px] border-lopha-border bg-white shadow-sm"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All Statuses</SelectItem>
-            <SelectItem value="SUCCESS">Success</SelectItem>
-            <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="FAILED">Failed</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="bg-white border border-lopha-border rounded-xl overflow-hidden shadow-sm">
-        <Table>
-          <TableHeader className="bg-lopha-light">
+      {/* Added overflow-x-auto for mobile scrolling */}
+      <div className="bg-white rounded-xl border border-lopha-border overflow-x-auto shadow-sm">
+        <Table className="min-w-[800px]">
+          <TableHeader className="bg-lopha-bg">
             <TableRow>
-              <TableHead className="cursor-pointer hover:text-lopha-charcoal transition-colors" onClick={() => handleSort('createdAt')}>
-                <div className="flex items-center gap-1">
-                  Timestamp
-                  {sortConfig.key === 'createdAt' && (sortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
-                </div>
-              </TableHead>
-              <TableHead>Reference</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead>Passenger</TableHead>
-              <TableHead className="cursor-pointer hover:text-lopha-charcoal transition-colors" onClick={() => handleSort('amount')}>
-                <div className="flex items-center gap-1">
-                  Amount
-                  {sortConfig.key === 'amount' && (sortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
-                </div>
-              </TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="font-bold text-lopha-blue whitespace-nowrap">Time</TableHead>
+              <TableHead className="font-bold text-lopha-blue whitespace-nowrap">Vehicle</TableHead>
+              <TableHead className="font-bold text-lopha-blue whitespace-nowrap">Phone</TableHead>
+              <TableHead className="font-bold text-lopha-blue whitespace-nowrap">Amount</TableHead>
+              <TableHead className="font-bold text-lopha-blue whitespace-nowrap">Status</TableHead>
+              <TableHead className="font-bold text-lopha-blue whitespace-nowrap">M-Pesa Ref</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSorted.length === 0 ? (
+            {list.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-lopha-gray">No transactions found.</TableCell>
+                <TableCell colSpan={6} className="text-center py-12 text-gray-500 font-medium">
+                  No transactions found.
+                </TableCell>
               </TableRow>
             ) : (
-              filteredAndSorted.map(t => (
-                <TableRow key={t.id} className="hover:bg-lopha-light/50 transition-colors">
-                  <TableCell className="text-sm">{formatTimestamp(t.createdAt)}</TableCell>
-                  <TableCell className="font-mono text-xs">{t.demoReference}</TableCell>
-                  <TableCell className="font-medium">{t.vehicleRegistration}</TableCell>
-                  <TableCell className="text-lopha-gray">{t.maskedPassengerPhone}</TableCell>
-                  <TableCell className="font-bold">{formatKsh(t.amount)}</TableCell>
-                  <TableCell><StatusBadge status={t.status} /></TableCell>
-                  <TableCell className="text-right">
-                    <TransactionDetailDialog tx={t} />
+              list.map(t => (
+                <TableRow key={t.id} className="hover:bg-gray-50/50">
+                  <TableCell className="text-sm font-medium whitespace-nowrap">{formatTimestamp(t.createdAt)}</TableCell>
+                  <TableCell className="font-bold whitespace-nowrap">{t.vehicleReg}</TableCell>
+                  <TableCell className="text-gray-600 whitespace-nowrap">{t.maskedPhone}</TableCell>
+                  <TableCell className="font-black text-lopha-blue whitespace-nowrap">{formatKsh(t.amount)}</TableCell>
+                  <TableCell>
+                    <span className={`text-xs font-bold px-2 py-1 rounded whitespace-nowrap ${t.status === 'SUCCESS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {t.status}
+                    </span>
                   </TableCell>
+                  <TableCell className="font-mono text-xs font-bold text-gray-500 whitespace-nowrap">{t.mpesaRef || '—'}</TableCell>
                 </TableRow>
               ))
             )}

@@ -6,10 +6,9 @@ export function SplashScreen() {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    // Start fading out after 2.2 seconds (giving time for animations to play)
+    // Wait 2.2 seconds, then fade out over 0.8 seconds
     const fadeTimer = setTimeout(() => setIsFading(true), 2200);
-    // Remove entirely after 2.7 seconds
-    const removeTimer = setTimeout(() => setIsVisible(false), 2700);
+    const removeTimer = setTimeout(() => setIsVisible(false), 3000);
 
     return () => {
       clearTimeout(fadeTimer);
@@ -21,37 +20,41 @@ export function SplashScreen() {
 
   return (
     <div 
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#141414] transition-opacity duration-500 ease-in-out ${
-        isFading ? 'opacity-0' : 'opacity-100'
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0B3B60] transition-opacity duration-700 ease-in-out ${
+        isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      {/* Glowing Background Orb */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-lopha-mint rounded-full blur-[100px] animate-glow pointer-events-none" />
+      {/* 1. The Matatu Background Image - Now 100% visible */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/matatu-bg.jpg')" }}
+      />
+      
+      {/* 2. Subtle Overlay - Darkens only the very top/bottom to keep text readable without hiding the image */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0B3B60]/90 via-black/30 to-[#0B3B60]/90" />
 
+      {/* 3. The Content */}
       <div className="relative z-10 flex flex-col items-center">
         
         {/* Main Logo Text */}
         <div className="overflow-hidden mb-2">
-          <div className="animate-premium-1 text-5xl md:text-6xl font-bold tracking-tighter text-white">
+          <div className="animate-premium-1 text-6xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
             LOPHA
           </div>
         </div>
         
         {/* Subtitle */}
-        <div className="overflow-hidden mb-10">
-          <div className="animate-premium-2 text-sm md:text-base font-semibold text-lopha-mint tracking-[0.4em] uppercase">
+        <div className="overflow-hidden mb-14">
+          <div className="animate-premium-2 text-sm md:text-xl font-bold text-white tracking-[0.5em] uppercase drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
             Travels
           </div>
         </div>
         
-        {/* Modern SVG Circular Loader */}
+        {/* Smooth Circular Loader */}
         <div className="animate-premium-3 flex flex-col items-center gap-4">
-          <svg className="w-10 h-10 text-lopha-mint animate-spin-slow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="32" strokeDashoffset="16" opacity="0.3"/>
-            <path d="M12 2C6.47715 2 2 6.47715 2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <p className="text-xs text-gray-500 font-medium tracking-widest uppercase">
-            Initializing
+          <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <p className="text-[10px] md:text-xs text-white/90 font-bold tracking-[0.2em] uppercase drop-shadow-md">
+            Securing...
           </p>
         </div>
         

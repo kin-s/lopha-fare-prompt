@@ -1,128 +1,93 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { DemoUser, Driver, Vehicle, PaymentTransaction, AuditEvent, UserRole } from '@/types';
-import { demoUsers, initialDrivers, initialVehicles, initialTransactions, initialAuditEvents } from '@/lib/mock-data';
+import { DemoUser, Vehicle, ReceivingAccount, Transaction, UserRole, Shift } from '@/types';
+import { demoUsers, initialVehicles, initialAccounts, initialTransactions, initialShifts } from '@/lib/mock-data';
 
-const STORAGE_KEY = 'lopha-demo-state-v2';
+const STORAGE_KEY = 'lopha-prompt-v6';
 
-type DemoState = {
-  currentRole: UserRole;
-  currentUser: DemoUser;
-  drivers: Driver[];
-  vehicles: Vehicle[];
-  transactions: PaymentTransaction[];
-  auditEvents: AuditEvent[];
+type DemoState = { 
+  currentUser: DemoUser; 
+  currentVehicle: Vehicle | null; // NEW: Tracks the logged-in vehicle
+  vehicles: Vehicle[]; 
+  accounts: ReceivingAccount[]; 
+  transactions: Transaction[]; 
+  shifts: Shift[]; 
 };
 
-type DemoContextValue = DemoState & {
-  hydrated: boolean;
-  setRole: (role: UserRole) => void;
-  addTransaction: (tx: PaymentTransaction) => void;
-  addVehicle: (v: Vehicle) => void;
-  updateVehicle: (v: Vehicle) => void;
-  addDriver: (d: Driver) => void;
-  addAuditEvent: (action: string) => void;
-  resetDemo: () => void;
+type DemoContextValue = DemoState & { 
+  hydrated: boolean; 
+  setRole: (role: UserRole) => void; 
+  loginConductor: (regNumber: string, name: string) => boolean;
+  logoutConductor: () => void;
+  addTransaction: (tx: Transaction) => void; 
+  addVehicle: (v: Vehicle) => void; 
+  addAccount: (a: ReceivingAccount) => void; 
+  openShift: (s: Shift) => void; 
+  closeShift: (id: string) => void; 
+  resetDemo: () => void; 
 };
 
 const DemoContext = createContext<DemoContextValue | null>(null);
 
-function getUserForRole(role: UserRole): DemoUser {
-  const match = demoUsers.find((u) => u.role === role);
-  return match ?? demoUsers[0];
-}
-
-const initialState: DemoState = {
-  currentRole: 'admin',
-  currentUser: getUserForRole('admin'),
-  drivers: initialDrivers,
-  vehicles: initialVehicles,
-  transactions: initialTransactions,
-  auditEvents: initialAuditEvents,
-};
-
 export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<DemoState>(initialState);
+  const [state, setState] = useState<DemoState>({ 
+    currentUser: demoUsers[0], 
+    currentVehicle: null,
+    vehicles: initialVehicles, 
+    accounts: initialAccounts, 
+    transactions: initialTransactions, 
+    shifts: initialShifts 
+  });
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setState(JSON.parse(raw));
-    } catch {}
+    try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) setState(JSON.parse(raw)); } catch {}
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    if (hydrated) try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   }, [state, hydrated]);
 
-  const setRole = useCallback((role: UserRole) => {
-    setState((prev) => ({ ...prev, currentRole: role, currentUser: getUserForRole(role) }));
+  const setRole = useCallback((role: UserRole) => { 
+    const u = demoUsers.find(x => x.role === role); 
+    // If switching to Conductor via sidebar, we clear the vehicle so they must log in
+    if (u) setState(p => ({ ...p, currentUser: u, currentVehicle: role === 'CONDUCTOR' ? null : p.currentVehicle })); 
   }, []);
 
-  const addTransaction = useCallback((tx: PaymentTransaction) => {
-    setState((prev) => ({
-      ...prev,
-      transactions: [tx, ...prev.transactions],
-      auditEvents: [
-        { id: crypto.randomUUID(), action: `Simulated ${tx.status} request for ${tx.vehicleRegistration}`, userId: prev.currentUser.id, userName: prev.currentUser.name, timestamp: new Date().toISOString() },
-        ...prev.auditEvents,
-      ],
-    }));
+  const loginConductor = useCallback((regNumber: string, name: string) => {
+    const vehicle = state.vehicles.find(v => v.regNumber.replace(/\s/g, '').toUpperCase() === regNumber.replace(/\s/g, '').toUpperCase());
+    if (vehicle) {
+      // Find or create conductor user
+      const existingUser = demoUsers.find(u => u.name.toLowerCase() === name.toLowerCase() && u.role === 'CONDUCTOR');
+      const user = existingUser || { id: crypto.randomUUID(), name, role: 'CONDUCTOR' as UserRole };
+      
+      setState(p => ({ ...p, currentUser: user, currentVehicle: vehicle }));
+      return true;
+    }
+    return false;
+  }, [state.vehicles]);
+
+  const logoutConductor = useCallback(() => {
+    setState(p => ({ ...p, currentVehicle: null }));
   }, []);
 
-  const addVehicle = useCallback((v: Vehicle) => {
-    setState((prev) => ({
-      ...prev,
-      vehicles: [...prev.vehicles, v],
-      auditEvents: [
-        { id: crypto.randomUUID(), action: `Vehicle ${v.registrationNumber} created`, userId: prev.currentUser.id, userName: prev.currentUser.name, timestamp: new Date().toISOString() },
-        ...prev.auditEvents,
-      ],
-    }));
+  const addTransaction = useCallback((tx: Transaction) => setState(p => ({ ...p, transactions: [tx, ...p.transactions] })), []);
+  const addVehicle = useCallback((v: Vehicle) => setState(p => ({ ...p, vehicles: [...p.vehicles, v] })), []);
+  const addAccount = useCallback((a: ReceivingAccount) => setState(p => ({ ...p, accounts: [...p.accounts, a] })), []);
+  const openShift = useCallback((s: Shift) => setState(p => ({ ...p, shifts: [s, ...p.shifts] })), []);
+  const closeShift = useCallback((id: string) => setState(p => ({ ...p, shifts: p.shifts.map(s => s.id === id ? { ...s, status: 'CLOSED', endTime: new Date().toISOString() } : s) })), []);
+  
+  const resetDemo = useCallback(() => { 
+    localStorage.removeItem(STORAGE_KEY); 
+    setState({ currentUser: demoUsers[0], currentVehicle: null, vehicles: initialVehicles, accounts: initialAccounts, transactions: [], shifts: [] }); 
   }, []);
 
-  const updateVehicle = useCallback((v: Vehicle) => {
-    setState((prev) => ({
-      ...prev,
-      vehicles: prev.vehicles.map((x) => (x.id === v.id ? v : x)),
-      auditEvents: [
-        { id: crypto.randomUUID(), action: `Vehicle ${v.registrationNumber} updated`, userId: prev.currentUser.id, userName: prev.currentUser.name, timestamp: new Date().toISOString() },
-        ...prev.auditEvents,
-      ],
-    }));
-  }, []);
-
-  const addDriver = useCallback((d: Driver) => {
-    setState((prev) => ({ ...prev, drivers: [...prev.drivers, d] }));
-  }, []);
-
-  const addAuditEvent = useCallback((action: string) => {
-    setState((prev) => ({
-      ...prev,
-      auditEvents: [
-        { id: crypto.randomUUID(), action, userId: prev.currentUser.id, userName: prev.currentUser.name, timestamp: new Date().toISOString() },
-        ...prev.auditEvents,
-      ],
-    }));
-  }, []);
-
-  const resetDemo = useCallback(() => {
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
-    setState({ ...initialState });
-  }, []);
-
-  return (
-    <DemoContext.Provider value={{ ...state, hydrated, setRole, addTransaction, addVehicle, updateVehicle, addDriver, addAuditEvent, resetDemo }}>
-      {children}
-    </DemoContext.Provider>
-  );
+  return <DemoContext.Provider value={{ ...state, hydrated, setRole, loginConductor, logoutConductor, addTransaction, addVehicle, addAccount, openShift, closeShift, resetDemo }}>{children}</DemoContext.Provider>;
 }
 
 export function useDemoStore() {
   const ctx = useContext(DemoContext);
-  if (!ctx) throw new Error('useDemoStore must be used inside DemoStoreProvider');
+  if (!ctx) throw new Error('useDemoStore must be used inside provider');
   return ctx;
 }

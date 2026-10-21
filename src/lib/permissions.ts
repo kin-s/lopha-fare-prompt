@@ -1,26 +1,18 @@
-import { DemoUser, UserRole } from '@/types';
+import { UserRole } from '@/types';
 
-export function canAccessAdminRoutes(user: DemoUser | null): boolean {
-  return user?.role === 'admin';
-}
-
-export type NavItem = { label: string; href: string };
-
-export function getNavItemsForRole(role: UserRole | null): NavItem[] {
-  if (role === 'admin') {
+export function getNavItems(role: UserRole) {
+  if (role === 'SACCO_ADMIN' || role === 'FINANCE_OFFICER') {
     return [
       { label: 'Overview', href: '/dashboard' },
+      { label: 'Accounts', href: '/dashboard/accounts' },
       { label: 'Vehicles', href: '/dashboard/vehicles' },
-      { label: 'Conductors', href: '/dashboard/conductors' },
-      { label: 'Reports', href: '/dashboard/reports' },
-      { label: 'Audit Log', href: '/dashboard/audit-log' },
-      { label: 'Settings', href: '/dashboard/settings' },
+      { label: 'Staff', href: '/dashboard/staff' },
+      { label: 'Transactions', href: '/dashboard/transactions' },
+      { label: 'Reports & CSV', href: '/dashboard/reports' },
     ];
   }
-  
-  // Conductor Navigation
   return [
-    { label: 'Home', href: '/dashboard' },
-    { label: 'New Request', href: '/dashboard/new-request' },
+    { label: 'Fare Prompt', href: '/dashboard' },
+    { label: 'My Transactions', href: '/dashboard/transactions' },
   ];
 }

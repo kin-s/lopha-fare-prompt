@@ -1,15 +1,25 @@
-import { PaymentTransaction, PaymentStatus } from '@/types';
-export type SimulationOutcome = 'SUCCESS' | 'PENDING' | 'FAILED' | 'CANCELLED' | 'TIMED_OUT';
-interface SimulateRequest { vehicleId: string; vehicleRegistration: string; conductorId: string; maskedPhone: string; amount: number; outcome: SimulationOutcome; }
-export async function simulatePayment(request: SimulateRequest): Promise<PaymentTransaction> {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  const statusMap: Record<SimulationOutcome, PaymentStatus> = {
-    SUCCESS: 'SUCCESS', PENDING: 'PENDING', FAILED: 'FAILED', CANCELLED: 'CANCELLED', TIMED_OUT: 'TIMED_OUT',
-  };
+import { Transaction, PaymentStatus } from '@/types';
+
+export async function simulatePrompt(
+  vehicleId: string, vehicleReg: string, conductorId: string, accountId: string, phone: string, amount: number
+): Promise<Transaction> {
+  // Simulates the time it takes for the customer to enter their PIN
+  await new Promise(r => setTimeout(r, 2500));
+
+  // Demo: Randomly succeed 80% of the time, fail 20%
+  const isSuccess = Math.random() > 0.2;
+  const status: PaymentStatus = isSuccess ? 'SUCCESS' : 'FAILED';
+  
+  // Generate a realistic M-Pesa receipt code
+  const mpesaRef = isSuccess ? 'Q' + Math.random().toString(36).substring(2, 10).toUpperCase() : null;
+
   return {
-    id: crypto.randomUUID(), demoReference: `DEMO-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    vehicleId: request.vehicleId, vehicleRegistration: request.vehicleRegistration, conductorId: request.conductorId,
-    maskedPassengerPhone: request.maskedPhone, amount: request.amount, status: statusMap[request.outcome],
-    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), source: 'SIMULATION', testOutcome: request.outcome,
+    id: crypto.randomUUID(),
+    vehicleId, vehicleReg, conductorId, accountId,
+    maskedPhone: phone.slice(0, 4) + '***' + phone.slice(-3),
+    amount,
+    status,
+    mpesaRef,
+    createdAt: new Date().toISOString(),
   };
 }
