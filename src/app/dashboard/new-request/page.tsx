@@ -6,11 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { formatKsh, maskPhoneNumber } from '@/lib/formatters';
+import { formatKsh } from '@/lib/formatters';
 import { simulatePayment, SimulationOutcome } from '@/lib/mock-payment-service';
 import { PaymentTransaction } from '@/types';
 import { useDemoStore } from '@/lib/demo-store';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function NewRequestPage() {
   const router = useRouter();
@@ -20,9 +20,11 @@ export default function NewRequestPage() {
   
   const [vehicleId, setVehicleId] = useState<string>(myVehicles[0]?.id || '');
   const [amount, setAmount] = useState<number>(50);
-  const [phone, setPhone] = useState<string>('');
+  const [note, setNote] = useState<string>('');
   const [outcome, setOutcome] = useState<SimulationOutcome>('SUCCESS');
-  const [processing, setProcessing] = useState(false);
+  
+  // States for the flow: 'form' -> 'waiting' -> 'result'
+  const [step, setStep] = useState<'form' | 'waiting' | 'result'>('form');
   const [tx, setTx] = useState<PaymentTransaction | null>(null);
 
   if (!hydrated) return <div className="p-6 text-lopha-gray">Loading...</div>;
@@ -31,34 +33,78 @@ export default function NewRequestPage() {
 
   const handleSimulate = async () => {
     if (!selectedVehicle) return;
-    setProcessing(true);
+    
+    // 1. Move to waiting screen (simulating the conductor checking their phone)
+    setStep('waiting');
+    
+    // 2. Call the mock service
     const res = await simulatePayment({
       vehicleId: selectedVehicle.id, 
       vehicleRegistration: selectedVehicle.registrationNumber, 
       conductorId: currentUser.id,
-      maskedPhone: maskPhoneNumber(phone), amount: amount, outcome: outcome,
+      maskedPhone: note || 'Passenger', // Using the note field for reference
+      amount: amount, 
+      outcome: outcome,
     });
+    
     addTransaction(res);
+    
+    // 3. Move to result screen
     setTx(res);
-    setProcessing(false);
+    setStep('result');
   };
 
-  if (tx) {
+  const resetForm = () => {
+    setTx(null);
+    setNote('');
+    setStep('form');
+  };
+
+  // --- RESULT SCREEN ---
+  if (step === 'result' && tx) {
     return (
       <div className="p-6 max-w-md mx-auto">
         <div className="bg-white p-6 rounded-xl border border-lopha-border text-center space-y-4 shadow-sm animate-page">
-          <h2 className="text-xl font-bold text-lopha-charcoal">Simulation Complete</h2>
+          <h2 className="text-xl font-bold text-lopha-charcoal">Confirmation Complete</h2>
           <StatusBadge status={tx.status} />
           <p className="text-3xl font-bold">{formatKsh(tx.amount)}</p>
           <p className="text-sm text-lopha-gray">Ref: {tx.demoReference}</p>
-          <div className="bg-red-50 text-red-700 p-3 rounded-lg text-xs font-bold">DEMO — NOT A REAL M-PESA TRANSACTION</div>
-          <Button className="w-full bg-lopha-charcoal text-white" onClick={() => { setTx(null); setPhone(''); }}>New Request</Button>
-          <Button variant="outline" className="w-full" onClick={() => router.push('/dashboard/transactions')}>View History</Button>
+          <p className="text-sm text-lopha-gray">Note: {note || 'N/A'}</p>
+          
+          <div className="bg-red-50 text-red-700 p-3 rounded-lg text-xs font-bold">
+            DEMO — NOT A REAL M-PESA TRANSACTION
+          </div>
+          
+          <Button 
+            className="w-full h-14 bg-lopha-mint hover:bg-blue-700 text-white font-bold text-lg mt-2" 
+            onClick={resetForm}
+          >
+            <CheckCircle2 className="mr-2 h-5 w-5" />
+            Confirm & Next Passenger
+          </Button>
         </div>
       </div>
     );
   }
 
+  // --- WAITING SCREEN ---
+  if (step === 'waiting') {
+    return (
+      <div className="p-6 max-w-md mx-auto h-[80vh] flex flex-col items-center justify-center text-center space-y-6 animate-page">
+        <Loader2 className="h-16 w-16 text-lopha-mint animate-spin" />
+        <div>
+          <h2 className="text-xl font-bold text-lopha-charcoal">Waiting for Confirmation</h2>
+          <p className="text-sm text-lopha-gray mt-2">Simulating a request to the conductor's phone...</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-lopha-border shadow-sm w-full max-w-xs">
+          <p className="text-xs text-lopha-gray uppercase">Amount</p>
+          <p className="text-2xl font-bold">{formatKsh(amount)}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- FORM SCREEN ---
   return (
     <div className="p-4 md:p-6 max-w-md mx-auto space-y-6 animate-page">
       <h1 className="text-2xl font-bold text-lopha-charcoal">New Fare Request</h1>
@@ -94,10 +140,16 @@ export default function NewRequestPage() {
           )}
 
           <div>
-            <Label>Passenger Phone Number</Label>
-            <Input type="tel" placeholder="07XXXXXXXX" className="h-12 mt-1 border-lopha-border" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <Label>Seat / Passenger Reference (Optional)</Label>
+            <Input 
+              type="text" 
+              placeholder="e.g., Seat 4, Mama Njeri" 
+              className="h-12 mt-1 border-lopha-border" 
+              value={note} 
+              onChange={(e) => setNote(e.target.value)} 
+            />
           </div>
-          
+
           <div>
             <Label>Fare (KSh)</Label>
             <div className="grid grid-cols-4 gap-2 mt-1 mb-2">
@@ -122,8 +174,8 @@ export default function NewRequestPage() {
             </Select>
           </div>
           
-          <Button onClick={handleSimulate} disabled={processing} className="w-full h-14 text-lg bg-lopha-mint hover:bg-blue-700 text-white font-bold mt-2 shadow-md">
-            {processing ? 'Simulating...' : 'Simulate Payment Prompt'}
+          <Button onClick={handleSimulate} className="w-full h-14 text-lg bg-lopha-mint hover:bg-blue-700 text-white font-bold mt-2 shadow-md">
+            Simulate Payment Prompt
           </Button>
         </div>
       )}

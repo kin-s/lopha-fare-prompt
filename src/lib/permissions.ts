@@ -12,15 +12,15 @@ export function getNavItemsForRole(role: UserRole | null): NavItem[] {
       { label: 'Overview', href: '/dashboard' },
       { label: 'Vehicles', href: '/dashboard/vehicles' },
       { label: 'Conductors', href: '/dashboard/conductors' },
-      { label: 'Transactions', href: '/dashboard/transactions' },
       { label: 'Reports', href: '/dashboard/reports' },
       { label: 'Audit Log', href: '/dashboard/audit-log' },
       { label: 'Settings', href: '/dashboard/settings' },
     ];
   }
+  
+  // Conductor Navigation
   return [
     { label: 'Home', href: '/dashboard' },
     { label: 'New Request', href: '/dashboard/new-request' },
-    { label: 'My Transactions', href: '/dashboard/transactions' },
   ];
 }
