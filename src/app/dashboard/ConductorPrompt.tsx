@@ -1,43 +1,30 @@
 'use client';
 import { useState } from 'react';
 import { useDemoStore } from '@/lib/demo-store';
-import { simulatePrompt } from '@/lib/mock-payment-service';
+import { simulatePrompt, recordCashTransaction } from '@/lib/mock-payment-service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShieldAlert, CheckCircle2, XCircle, Loader2, PlayCircle, StopCircle, LogOut, KeyRound } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, XCircle, Loader2, PlayCircle, StopCircle, LogOut, KeyRound, Banknote } from 'lucide-react';
 import { formatKsh } from '@/lib/formatters';
 
 export default function ConductorPrompt() {
   const { 
-    currentUser, 
-    currentVehicle, 
-    accounts, 
-    vehicles, 
-    transactions, // ← 1. Get transactions from the store
-    addTransaction, 
-    shifts, 
-    openShift, 
-    closeShift, 
-    loginConductor, 
-    logoutConductor 
+    currentUser, currentVehicle, accounts, transactions, addTransaction, shifts, openShift, closeShift, loginConductor, logoutConductor 
   } = useDemoStore();
   
-  // Login State
   const [loginReg, setLoginReg] = useState('');
   const [loginName, setLoginName] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Payment State
   const [phone, setPhone] = useState('');
-  const [amount, setAmount] = useState<string>(''); 
+  const [amount, setAmount] = useState<string>('');
   const [step, setStep] = useState<'form' | 'waiting' | 'result'>('form');
   const [result, setResult] = useState<{ status: string; ref: string | null } | null>(null);
 
   const activeShift = shifts.find(s => s.conductorId === currentUser.id && s.status === 'OPEN');
   const account = accounts.find(a => a.id === currentVehicle?.accountId);
   
-  // ← 2. Compute recentTxs directly from the transactions array (no useState)
   const recentTxs = transactions
     .filter(t => t.vehicleId === currentVehicle?.id && t.status === 'SUCCESS')
     .slice(0, 3);
@@ -65,26 +52,25 @@ export default function ConductorPrompt() {
     setStep('result');
   };
 
-  // --- LOGIN SCREEN ---
+  // NEW: Handle Cash / Offline
+  const handleCash = () => {
+    if (!numericAmount || !currentVehicle || !account || !activeShift) return;
+    const tx = recordCashTransaction(currentVehicle.id, currentVehicle.regNumber, currentUser.id, account.id, numericAmount);
+    addTransaction(tx);
+    setResult({ status: tx.status, ref: tx.mpesaRef });
+    setStep('result');
+  };
+
   if (!currentVehicle) {
     return (
       <div className="p-6 max-w-md mx-auto mt-12 animate-page">
         <div className="bg-white p-8 rounded-2xl border border-lopha-border shadow-xl">
-          <div className="w-16 h-16 bg-lopha-blue rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-md">
-            <KeyRound className="h-8 w-8 text-white" />
-          </div>
+          <div className="w-16 h-16 bg-lopha-blue rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-md"><KeyRound className="h-8 w-8 text-white" /></div>
           <h1 className="text-2xl font-black text-center text-lopha-blue mb-2">Conductor Login</h1>
           <p className="text-center text-gray-500 text-sm mb-6">Enter your vehicle registration to start collecting fares.</p>
-          
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <Label className="text-lopha-blue font-bold">Vehicle Registration</Label>
-              <Input value={loginReg} onChange={e => setLoginReg(e.target.value)} placeholder="e.g. KDA 123A" className="h-12 uppercase mt-1" required />
-            </div>
-            <div>
-              <Label className="text-lopha-blue font-bold">Your Name</Label>
-              <Input value={loginName} onChange={e => setLoginName(e.target.value)} placeholder="e.g. David Ochieng" className="h-12 mt-1" required />
-            </div>
+            <div><Label className="text-lopha-blue font-bold">Vehicle Registration</Label><Input value={loginReg} onChange={e => setLoginReg(e.target.value)} placeholder="e.g. KDA 123A" className="h-12 uppercase mt-1" required /></div>
+            <div><Label className="text-lopha-blue font-bold">Your Name</Label><Input value={loginName} onChange={e => setLoginName(e.target.value)} placeholder="e.g. David Ochieng" className="h-12 mt-1" required /></div>
             {loginError && <p className="text-sm font-bold text-red-500 text-center">{loginError}</p>}
             <Button type="submit" className="w-full h-14 bg-lopha-blue text-white font-bold text-lg mt-2">Access POS</Button>
           </form>
@@ -93,7 +79,6 @@ export default function ConductorPrompt() {
     );
   }
 
-  // --- WAITING SCREEN ---
   if (step === 'waiting') {
     return (
       <div className="p-6 max-w-md mx-auto h-[70vh] flex flex-col items-center justify-center text-center space-y-6 animate-page">
@@ -104,7 +89,6 @@ export default function ConductorPrompt() {
     );
   }
 
-  // --- RESULT SCREEN ---
   if (step === 'result') {
     return (
       <div className="p-6 max-w-md mx-auto mt-10 animate-page">
@@ -112,29 +96,24 @@ export default function ConductorPrompt() {
           {result?.status === 'SUCCESS' ? <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" /> : <XCircle className="h-16 w-16 text-red-500 mx-auto" />}
           <h2 className="text-3xl font-black">{result?.status}</h2>
           <p className="text-4xl font-black text-lopha-blue">{formatKsh(numericAmount)}</p>
-          {result?.ref && <p className="font-mono text-sm bg-blue-50 text-blue-800 p-3 rounded-lg font-bold">M-Pesa Ref: {result.ref}</p>}
+          {result?.ref && <p className="font-mono text-sm bg-blue-50 text-blue-800 p-3 rounded-lg font-bold">Ref: {result.ref}</p>}
           <Button onClick={() => { setStep('form'); setPhone(''); setAmount(''); }} className="w-full h-14 bg-lopha-blue text-white font-bold text-lg mt-4">Next Passenger</Button>
         </div>
       </div>
     );
   }
 
-  // --- MAIN POS SCREEN ---
   return (
     <div className="p-4 md:p-6 max-w-md mx-auto space-y-6 animate-page">
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-black text-lopha-blue">{currentVehicle.regNumber}</h1>
           <p className="text-sm font-bold text-gray-500">{currentVehicle.routeName}</p>
           <p className="text-xs text-gray-400 mt-1">Receiving: {account?.displayName}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={logoutConductor} className="text-red-500 border-red-200 hover:bg-red-50">
-          <LogOut className="h-4 w-4 mr-2" /> End Session
-        </Button>
+        <Button variant="outline" size="sm" onClick={logoutConductor} className="text-red-500 border-red-200 hover:bg-red-50"><LogOut className="h-4 w-4 mr-2" /> End</Button>
       </div>
 
-      {/* Shift Status */}
       <div className={`p-4 rounded-xl border ${activeShift ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} flex justify-between items-center shadow-sm`}>
         <div>
           <p className="font-bold text-sm">{activeShift ? 'Shift is OPEN' : 'Shift CLOSED'}</p>
@@ -147,7 +126,6 @@ export default function ConductorPrompt() {
         )}
       </div>
 
-      {/* Payment Form */}
       <div className={`bg-white p-5 rounded-2xl border border-lopha-border shadow-md space-y-5 relative ${!activeShift ? 'opacity-50 pointer-events-none' : ''}`}>
         {!activeShift && <div className="absolute inset-0 z-10 flex items-center justify-center font-bold text-red-600 text-lg bg-white/60 rounded-2xl">Open shift to take payments</div>}
         
@@ -160,8 +138,6 @@ export default function ConductorPrompt() {
         <div>
           <Label className="text-lopha-blue font-bold text-base">Fare Amount (KSh)</Label>
           <Input type="number" placeholder="0" value={amount} onChange={e => setAmount(e.target.value)} className="h-16 text-4xl font-black mt-1 text-center bg-blue-50/50" />
-          
-          {/* Quick Tap Buttons */}
           <div className="grid grid-cols-4 gap-2 mt-3">
             {[30, 50, 100, 150].map(v => (
               <Button key={v} type="button" variant={amount === String(v) ? 'default' : 'outline'} onClick={() => setAmount(String(v))} className={`h-10 font-bold ${amount === String(v) ? 'bg-lopha-blue text-white' : 'text-gray-600'}`}>{v}</Button>
@@ -174,12 +150,18 @@ export default function ConductorPrompt() {
           <p>Prompt will be sent to the customer. You cannot redirect this payment.</p>
         </div>
 
-        <Button onClick={handlePrompt} disabled={!isValidPhone || !numericAmount || !activeShift} className="w-full h-16 text-xl bg-lopha-blue hover:bg-blue-900 text-white font-black tracking-wide shadow-lg">
-          Request Payment
-        </Button>
+        <div className="grid grid-cols-1 gap-3">
+          <Button onClick={handlePrompt} disabled={!isValidPhone || !numericAmount || !activeShift} className="w-full h-16 text-xl bg-lopha-blue hover:bg-blue-900 text-white font-black tracking-wide shadow-lg">
+            Request M-Pesa Payment
+          </Button>
+          
+          {/* NEW: Cash / Offline Button */}
+          <Button onClick={handleCash} disabled={!numericAmount || !activeShift} variant="outline" className="w-full h-12 text-sm border-2 border-dashed border-green-500 text-green-700 hover:bg-green-50 font-bold">
+            <Banknote className="h-5 w-5 mr-2" /> Record Cash / Offline Payment
+          </Button>
+        </div>
       </div>
 
-      {/* Recent History */}
       {recentTxs.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Recent Receipts</h3>

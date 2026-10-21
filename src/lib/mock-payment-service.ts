@@ -23,3 +23,18 @@ export async function simulatePrompt(
     createdAt: new Date().toISOString(),
   };
 }
+
+// NEW: Manual/Offline Cash Entry
+export function recordCashTransaction(
+  vehicleId: string, vehicleReg: string, conductorId: string, accountId: string, amount: number
+): Transaction {
+  return {
+    id: crypto.randomUUID(),
+    vehicleId, vehicleReg, conductorId, accountId,
+    maskedPhone: 'CASH / OFFLINE',
+    amount,
+    status: 'SUCCESS',
+    mpesaRef: 'CASH-' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+    createdAt: new Date().toISOString(),
+  };
+}
