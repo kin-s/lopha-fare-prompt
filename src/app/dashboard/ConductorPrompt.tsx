@@ -1,26 +1,31 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useDemoStore } from '@/lib/demo-store';
 import { simulatePrompt, recordCashTransaction } from '@/lib/mock-payment-service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShieldAlert, CheckCircle2, XCircle, Loader2, PlayCircle, StopCircle, LogOut, KeyRound, Banknote } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, XCircle, Loader2, PlayCircle, StopCircle, Banknote, LogOut } from 'lucide-react';
 import { formatKsh } from '@/lib/formatters';
 
 export default function ConductorPrompt() {
+  const router = useRouter();
   const { 
-    currentUser, currentVehicle, accounts, transactions, addTransaction, shifts, openShift, closeShift, loginConductor, logoutConductor 
+    currentUser, currentVehicle, accounts, transactions, addTransaction, shifts, openShift, closeShift, logoutConductor 
   } = useDemoStore();
   
-  const [loginReg, setLoginReg] = useState('');
-  const [loginName, setLoginName] = useState('');
-  const [loginError, setLoginError] = useState('');
-
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState<string>('');
   const [step, setStep] = useState<'form' | 'waiting' | 'result'>('form');
   const [result, setResult] = useState<{ status: string; ref: string | null } | null>(null);
+
+  // If there is no current vehicle after hydration, redirect to login
+  useEffect(() => {
+    if (currentUser.role === 'CONDUCTOR' && !currentVehicle) {
+      router.push('/login/conductor');
+    }
+  }, [currentUser.role, currentVehicle, router]);
 
   const activeShift = shifts.find(s => s.conductorId === currentUser.id && s.status === 'OPEN');
   const account = accounts.find(a => a.id === currentVehicle?.accountId);
@@ -28,13 +33,6 @@ export default function ConductorPrompt() {
   const recentTxs = transactions
     .filter(t => t.vehicleId === currentVehicle?.id && t.status === 'SUCCESS')
     .slice(0, 3);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const success = loginConductor(loginReg, loginName);
-    if (!success) setLoginError('Vehicle registration not found. Check with Admin.');
-    else setLoginError('');
-  };
 
   const isValidPhone = /^(?:0[17]\d{8}|254[17]\d{8})$/.test(phone);
   const numericAmount = Number(amount);
@@ -52,7 +50,6 @@ export default function ConductorPrompt() {
     setStep('result');
   };
 
-  // NEW: Handle Cash / Offline
   const handleCash = () => {
     if (!numericAmount || !currentVehicle || !account || !activeShift) return;
     const tx = recordCashTransaction(currentVehicle.id, currentVehicle.regNumber, currentUser.id, account.id, numericAmount);
@@ -61,23 +58,12 @@ export default function ConductorPrompt() {
     setStep('result');
   };
 
-  if (!currentVehicle) {
-    return (
-      <div className="p-6 max-w-md mx-auto mt-12 animate-page">
-        <div className="bg-white p-8 rounded-2xl border border-lopha-border shadow-xl">
-          <div className="w-16 h-16 bg-lopha-blue rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-md"><KeyRound className="h-8 w-8 text-white" /></div>
-          <h1 className="text-2xl font-black text-center text-lopha-blue mb-2">Conductor Login</h1>
-          <p className="text-center text-gray-500 text-sm mb-6">Enter your vehicle registration to start collecting fares.</p>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div><Label className="text-lopha-blue font-bold">Vehicle Registration</Label><Input value={loginReg} onChange={e => setLoginReg(e.target.value)} placeholder="e.g. KDA 123A" className="h-12 uppercase mt-1" required /></div>
-            <div><Label className="text-lopha-blue font-bold">Your Name</Label><Input value={loginName} onChange={e => setLoginName(e.target.value)} placeholder="e.g. David Ochieng" className="h-12 mt-1" required /></div>
-            {loginError && <p className="text-sm font-bold text-red-500 text-center">{loginError}</p>}
-            <Button type="submit" className="w-full h-14 bg-lopha-blue text-white font-bold text-lg mt-2">Access POS</Button>
-          </form>
-        </div>
-      </div>
-    );
-  }
+  const handleLogout = () => {
+    logoutConductor();
+    router.push('/login/conductor');
+  };
+
+  if (!currentVehicle) return null; // Will redirect via useEffect
 
   if (step === 'waiting') {
     return (
@@ -111,7 +97,7 @@ export default function ConductorPrompt() {
           <p className="text-sm font-bold text-gray-500">{currentVehicle.routeName}</p>
           <p className="text-xs text-gray-400 mt-1">Receiving: {account?.displayName}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={logoutConductor} className="text-red-500 border-red-200 hover:bg-red-50"><LogOut className="h-4 w-4 mr-2" /> End</Button>
+        <Button variant="outline" size="sm" onClick={handleLogout} className="text-red-500 border-red-200 hover:bg-red-50"><LogOut className="h-4 w-4 mr-2" /> End</Button>
       </div>
 
       <div className={`p-4 rounded-xl border ${activeShift ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} flex justify-between items-center shadow-sm`}>
@@ -155,7 +141,6 @@ export default function ConductorPrompt() {
             Request M-Pesa Payment
           </Button>
           
-          {/* NEW: Cash / Offline Button */}
           <Button onClick={handleCash} disabled={!numericAmount || !activeShift} variant="outline" className="w-full h-12 text-sm border-2 border-dashed border-green-500 text-green-700 hover:bg-green-50 font-bold">
             <Banknote className="h-5 w-5 mr-2" /> Record Cash / Offline Payment
           </Button>
