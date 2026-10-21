@@ -13,7 +13,7 @@ import { ShieldAlert, CheckCircle2, Loader2, MessageSquare, XCircle } from 'luci
 export default function NewRequestPage() {
   const { addTransaction, currentUser, vehicles, hydrated } = useDemoStore();
   
-  const myVehicles = vehicles.filter(v => v.assignedConductorId === currentUser.id);
+  const myVehicles = vehicles.filter(v => v.assignedConductorName === currentUser.name);
   
   const [vehicleId, setVehicleId] = useState<string>(myVehicles[0]?.id || '');
   const [amount, setAmount] = useState<number>(50);

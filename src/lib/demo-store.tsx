@@ -1,14 +1,14 @@
 'use client';
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { DemoUser, Vehicle, PaymentTransaction, AuditEvent, UserRole } from '@/types';
-import { demoUsers, initialVehicles, initialTransactions, initialAuditEvents } from '@/lib/mock-data';
+import { DemoUser, Driver, Vehicle, PaymentTransaction, AuditEvent, UserRole } from '@/types';
+import { demoUsers, initialDrivers, initialVehicles, initialTransactions, initialAuditEvents } from '@/lib/mock-data';
 
-const STORAGE_KEY = 'lopha-demo-state-v1';
+const STORAGE_KEY = 'lopha-demo-state-v2';
 
 type DemoState = {
   currentRole: UserRole;
   currentUser: DemoUser;
+  drivers: Driver[];
   vehicles: Vehicle[];
   transactions: PaymentTransaction[];
   auditEvents: AuditEvent[];
@@ -20,6 +20,7 @@ type DemoContextValue = DemoState & {
   addTransaction: (tx: PaymentTransaction) => void;
   addVehicle: (v: Vehicle) => void;
   updateVehicle: (v: Vehicle) => void;
+  addDriver: (d: Driver) => void;
   addAuditEvent: (action: string) => void;
   resetDemo: () => void;
 };
@@ -34,6 +35,7 @@ function getUserForRole(role: UserRole): DemoUser {
 const initialState: DemoState = {
   currentRole: 'admin',
   currentUser: getUserForRole('admin'),
+  drivers: initialDrivers,
   vehicles: initialVehicles,
   transactions: initialTransactions,
   auditEvents: initialAuditEvents,
@@ -53,9 +55,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   }, [state, hydrated]);
 
   const setRole = useCallback((role: UserRole) => {
@@ -95,6 +95,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const addDriver = useCallback((d: Driver) => {
+    setState((prev) => ({ ...prev, drivers: [...prev.drivers, d] }));
+  }, []);
+
   const addAuditEvent = useCallback((action: string) => {
     setState((prev) => ({
       ...prev,
@@ -111,7 +115,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <DemoContext.Provider value={{ ...state, hydrated, setRole, addTransaction, addVehicle, updateVehicle, addAuditEvent, resetDemo }}>
+    <DemoContext.Provider value={{ ...state, hydrated, setRole, addTransaction, addVehicle, updateVehicle, addDriver, addAuditEvent, resetDemo }}>
       {children}
     </DemoContext.Provider>
   );

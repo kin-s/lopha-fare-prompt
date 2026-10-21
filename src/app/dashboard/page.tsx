@@ -9,7 +9,8 @@ export default function DashboardHome() {
   const { currentUser, currentRole, transactions, vehicles, hydrated } = useDemoStore();
   if (!hydrated) return <PageLoader />;
 
-  const myVehicles = vehicles.filter(v => v.assignedConductorId === currentUser.id || currentRole === 'admin');
+  // FIX: Changed from assignedConductorId to assignedConductorName
+  const myVehicles = vehicles.filter(v => v.assignedConductorName === currentUser.name || currentRole === 'admin');
   const todayTxs = transactions.filter(t => new Date(t.createdAt).toDateString() === new Date().toDateString());
 
   return (
@@ -56,7 +57,6 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      {/* Only show the big New Fare Request button to Conductors */}
       {currentRole === 'conductor' && (
         <div className="grid gap-4 md:grid-cols-1">
           <Link href="/dashboard/new-request">
@@ -67,7 +67,6 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {/* Recent Activity (Only for Conductors) */}
       {currentRole === 'conductor' && todayTxs.length > 0 && (
         <div>
           <h2 className="text-sm font-bold text-lopha-charcoal mb-2">Recent Activity</h2>
